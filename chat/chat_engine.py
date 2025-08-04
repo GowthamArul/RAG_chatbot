@@ -25,5 +25,5 @@ async def get_chat_engine(session_id, db: AsyncSession):
             node_postprocessors=[DefaultNodePostProcessor()]
         )
     except Exception as e:
-        print(f"Error in get_chat_engine: {e} {traceback.format_exc()}")
+        print(f"Error in get_chat_engine: {e} - {traceback.format_exc()}")
         return None

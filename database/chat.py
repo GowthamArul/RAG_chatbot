@@ -27,4 +27,8 @@ class ChatMessageModel(Base):
     sender_type: Mapped[str] = mapped_column(
         nullable=False
     )
-
+    user_id: Mapped[str] = mapped_column(
+        nullable=True, index=True
+        )
+    status: Mapped[str] = mapped_column(
+        nullable=True, default="ACTIVE")
