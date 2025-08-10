@@ -28,19 +28,19 @@ class ChatMessageModel(ClaraBase):
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     session_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), nullable=False
+        PG_UUID(as_uuid=True), nullable=False, index = True
     )
     message_ts: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False, index=True
     )
     message_text: Mapped[str] = mapped_column(
         nullable=False
     )
     sender_type: Mapped[str] = mapped_column(
-        nullable=False
+        nullable=False, index=True
     )
     user_id: Mapped[str] = mapped_column(
         nullable=True, index=True
         )
     status: Mapped[str] = mapped_column(
-        nullable=True, default="ACTIVE")
+        nullable=True, default="ACTIVE", index=True)
