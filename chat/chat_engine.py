@@ -1,4 +1,5 @@
 import traceback
+import os
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,19 +10,23 @@ from configuration.nodeprocessor import DefaultNodePostProcessor
 from chat.chat_history import get_chat_history
 from chat.document_index import load_index
 from llm_model.init_models import get_models
-# from config import SYSTEM_PROMPT
+from models.chat_models import ChatRequest
 
-retriever = load_index()
 
-async def get_chat_engine(session_id, db: AsyncSession):
+
+async def get_chat_engine(request:ChatRequest, db: AsyncSession):
     try:
-        history = await get_chat_history(session_id, db)
-        print(f"Chat history for session {session_id}: {history}")
+        retriever = load_index(request.query)
+        with open(os.path.join(os.path.dirname(__file__), 'system_prompt.txt'), 'r') as file:
+            system_prompt = file.read().strip()
+
+        history = await get_chat_history(request.session_id, db)
+        
         return CondensePlusContextChatEngine.from_defaults(
             retriever=retriever,
             llm=get_models()[0],
             chat_history=history,
-            system_prompt="You are a helpful assistant answering questions based on company documents.",
+            system_prompt=system_prompt,
             node_postprocessors=[DefaultNodePostProcessor()]
         )
     except Exception as e:

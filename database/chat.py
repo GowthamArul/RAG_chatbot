@@ -1,15 +1,27 @@
-from sqlalchemy import ForeignKey, DateTime
+from sqlalchemy import ForeignKey, DateTime, MetaData, Text
 from datetime import datetime
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.types import Uuid as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 import uuid
 
+from configuration.config import SCHEMA_NAME
 
-Base = declarative_base()
 
+class ClaraBase:
+    metadata = MetaData(
+        schema=SCHEMA_NAME,
+        naming_convention={
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(columns_name)s",
+            "ck": "ck_%(table_name)s_%(constraint_name)s",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s"
+        }
+    )
+    type_annotation_map = {str:Text, datetime:DateTime(timezone=True)}
 
-class ChatMessageModel(Base):
+class ChatMessageModel(ClaraBase):
     __tablename__ = 'chat_messages'
 
     id: Mapped[uuid.UUID] = mapped_column(

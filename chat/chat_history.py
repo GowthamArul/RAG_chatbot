@@ -6,13 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 
-from llama_index.core.llms import ChatMessage as LlamaChatMessage
 from llama_index.core.prompts.base import ChatPromptTemplate
 
 from database.chat import ChatMessageModel
 from models.chat_models import ChatRequest
 
-async def get_chat_history(session_id, db:AsyncSession, limit:int=6):
+async def get_chat_history(session_id, db:AsyncSession, limit:int=10):
     try:
         if not isinstance(session_id, type(None)):
             session_id = uuid.UUID(session_id)
@@ -29,12 +28,15 @@ async def get_chat_history(session_id, db:AsyncSession, limit:int=6):
             return []
         
         formatted_messages = [
-            ("assistant" if str(message.sender_type) == "ASSISTANT" else "user", message.message_text.strip()) for message in messages
+            (
+                "assistant" if str(message.sender_type) == "ASSISTANT" else "user", 
+                message.message_text.strip()
+            ) 
+            for message in messages
         ]
         chat_history = ChatPromptTemplate.from_messages(formatted_messages)
         history = chat_history.message_templates
         return history if history else []
-        # return [LlamaChatMessage(role=str(m.sender_type).lower(), content=m.message_text) for m in messages]
     
     except Exception as e:
         print(f"Error in get_chat_history: {e} {traceback.format_exc()}")

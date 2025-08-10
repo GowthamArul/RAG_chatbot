@@ -20,8 +20,6 @@ class DefaultNodePostProcessor(BaseNodePostprocessor):
             )
             default_node.node.metadata.update({"is_default": True})
             return [default_node]
-        
-        for idx, each_node in enumerate(nodes):
-            each_node.node.metadata['citation_number'] = idx+1
+
         return nodes
     

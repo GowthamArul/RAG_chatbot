@@ -1,4 +1,8 @@
 import os
+import re
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text 
 
 from llama_index.core import VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
@@ -8,21 +12,28 @@ from llama_index.core.storage import StorageContext
 from llama_index.core.vector_stores import (MetadataFilters, MetadataFilter, FilterOperator)
 from llama_index.core.vector_stores.types import VectorStoreQueryMode
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text 
-import asyncio
-
 from llm_model.init_models import get_models
+from configuration.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, SCHEMA_NAME, TABLE_NAME
 
 
 # PGVectorStore instance
 vector_store = PGVectorStore.from_params(
-    database="pgvector_db",
-    host="localhost",
-    password="password",
+    database=DB_NAME,
+    host=DB_HOST,
+    password=DB_PASSWORD,
     port=5432,
-    user="myuser",
-    embed_dim=768,
+    user=DB_USER,
+    schema_name = SCHEMA_NAME,
+    table_name = TABLE_NAME,
+    embed_dim=1536,
+    hybrid_search=True,
+    text_search_config = "english",
+    hnsw_kwargs={
+        "hnsw_ef_construction": 64,
+        "hnsw_ef_search": 100,
+        "hnsw_m": 16,
+        "hnsw_dist_method": "vector_cosine_ops"
+        }
 )
 
 
@@ -75,13 +86,20 @@ async def build_index(db:AsyncSession):
     return index.as_retriever()
 
 
-def load_index(k:int = 3):
+def load_index(query:str, k:int = 10):
     """    Load the index from the vector store and return it as a retriever.
     """
-
-    filters = MetadataFilters(filters=[
-        MetadataFilter(key="product", value="widget-x", operator=FilterOperator.IN)
-    ])
+    product_name = re.findall(r'\bNCT\d+\b', query)
+    if len(product_name) > 0:
+        metadata_filter = MetadataFilters(filters=[
+            MetadataFilter(
+                            key="product", 
+                            value=product_name[0], 
+                            operator=FilterOperator.IN
+                            )
+        ])
+    else:
+        metadata_filter = MetadataFilters(filters=[])
 
 
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -89,4 +107,6 @@ def load_index(k:int = 3):
         vector_store=vector_store,
         storage_context=storage_context,
         embed_model=get_models()[1],
-    ).as_retriever(similarity_top_k=k, vector_store_query_mode= VectorStoreQueryMode.HYBRID) # , filters=filters
+    ).as_retriever(similarity_top_k=k, 
+                   vector_store_query_mode= VectorStoreQueryMode.HYBRID,
+                   filters = metadata_filter)
