@@ -25,7 +25,7 @@ vector_store = PGVectorStore.from_params(
     user=DB_USER,
     schema_name = SCHEMA_NAME,
     table_name = TABLE_NAME,
-    embed_dim=1536,
+    embed_dim=768,
     hybrid_search=True,
     text_search_config = "english",
     hnsw_kwargs={
@@ -41,7 +41,7 @@ async def file_already_indexed(all_files:list, db:AsyncSession):
 
     sql = text("""
         SELECT DISTINCT metadata_ ->> 'file_name' AS file_name
-        FROM data_llamaindex;
+        FROM clara.data_vector_index dvi;
     """)
 
     result = await db.execute(sql)

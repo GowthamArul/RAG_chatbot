@@ -17,7 +17,7 @@ from models.chat_models import ChatRequest
 async def get_chat_engine(request:ChatRequest, db: AsyncSession):
     try:
         retriever = load_index(request.query)
-        with open(os.path.join(os.path.dirname(__file__), 'system_prompt.txt'), 'r') as file:
+        with open(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'prompts', 'system_prompt.jinja')), 'r') as file:
             system_prompt = file.read().strip()
 
         history = await get_chat_history(request.session_id, db)
@@ -31,4 +31,3 @@ async def get_chat_engine(request:ChatRequest, db: AsyncSession):
         )
     except Exception as e:
         print(f"Error in get_chat_engine: {e} - {traceback.format_exc()}")
-        return None

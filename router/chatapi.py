@@ -23,15 +23,16 @@ async def chat(request: ChatRequest, db: AsyncSession = Depends(get_db)):
         chat_engine = await get_chat_engine(request, db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error initializing chat engine: {str(e)}")
+
+    streaming_response = chat_engine.stream_chat(request.query)
+    if not isinstance(streaming_response, StreamingAgentChatResponse):
+        raise HTTPException(status_code=500, detail="Invalid response from chat engine")
     
     async def event_generator():
         chat_history = {"USER": request.query}
         accumulated_response = ""
         response_dict = {}
         try:
-            streaming_response = chat_engine.stream_chat(request.query)
-            if not isinstance(streaming_response, StreamingAgentChatResponse):
-                raise HTTPException(status_code=500, detail="Invalid response from chat engine")
             
             for chunk in streaming_response.response_gen:
                 accumulated_response += chunk

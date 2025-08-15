@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, DateTime, MetaData, Text
 from datetime import datetime
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.types import Uuid as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 import uuid
@@ -8,7 +8,7 @@ import uuid
 from configuration.config import SCHEMA_NAME
 
 
-class ClaraBase:
+class ClaraBase(DeclarativeBase):
     metadata = MetaData(
         schema=SCHEMA_NAME,
         naming_convention={
